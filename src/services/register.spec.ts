@@ -1,15 +1,20 @@
-import { expect, describe, it } from 'vitest';
+import { expect, describe, it, beforeEach } from 'vitest';
 import { RegisterService } from './register';
 import { compare } from 'bcryptjs';
 import { InMemoryUsersRepository } from '@/repositories/in-memory/in-memory-users-repository';
 import { UserAlreadyExistsError } from './errors/user-already-exists-error';
 
-describe('Register Service', () => {
-  it('should hash user password upon registration', async () => {
-    const usersRepository = new InMemoryUsersRepository();
-    const registerService = new RegisterService(usersRepository);
+let usersRepository: InMemoryUsersRepository;
+let sut: RegisterService;
 
-    const { user } = await registerService.execute({
+describe('Register Service', () => {
+  beforeEach(() => {
+    usersRepository = new InMemoryUsersRepository();
+    sut = new RegisterService(usersRepository);
+  });
+
+  it('should hash user password upon registration', async () => {
+    const { user } = await sut.execute({
       name: 'Fulano',
       email: 'fulano@example.com',
       password: '123456'
@@ -21,18 +26,15 @@ describe('Register Service', () => {
   });
 
   it('should not be able to register with same email twice', async () => {
-    const usersRepository = new InMemoryUsersRepository();
-    const registerService = new RegisterService(usersRepository);
-
     const email = 'fulano@example.com';
 
-    await registerService.execute({
+    await sut.execute({
       name: 'Fulano',
       email,
       password: '123456'
     });
 
-    await expect(() => registerService.execute({
+    await expect(() => sut.execute({
       name: 'Fulano',
       email,
       password: '123456'
@@ -40,10 +42,7 @@ describe('Register Service', () => {
   });
 
   it('should be able to register', async () => {
-    const usersRepository = new InMemoryUsersRepository();
-    const registerService = new RegisterService(usersRepository);
-
-    const { user } = await registerService.execute({
+    const { user } = await sut.execute({
       name: 'Fulano',
       email: 'fulano@example.com',
       password: '123456'
